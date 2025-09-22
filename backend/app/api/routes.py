@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse, FileResponse
 from ..core.config import get_settings
 from ..core.celery_app import celery_app
 from ..tasks.pipeline import process_job
-from ..utils.ffmpeg import extract_audio
+from ..tasks.conversion import convert_audio_task
 
 api_router = APIRouter()
 settings = get_settings()
@@ -108,22 +108,23 @@ def convert_audio(video_id: str, params: dict = Body(default={})):  # type: igno
         raise HTTPException(status_code=404, detail="video not found")
 
     fmt = str(params.get("format", "wav")).lower()
-    if fmt != "wav":
-        raise HTTPException(status_code=400, detail="only wav output is supported currently")
+    if fmt not in {"wav", "mp3"}:
+        raise HTTPException(status_code=400, detail="supported formats: wav, mp3")
 
     sample_rate = int(params.get("sample_rate", 16000))
     channels = int(params.get("channels", 1))
+    bitrate = params.get("bitrate")  # allow "128k" or 128 for mp3
 
-    out_filename = f"{video_id}.wav"
-    out_path = AUDIO_DIR / out_filename
+    task = convert_audio_task.delay(
+        video_path=str(video_path),
+        format=fmt,
+        sample_rate=sample_rate,
+        channels=channels,
+        bitrate=bitrate,
+        storage_dir=str(settings.storage_path()),
+    )
 
-    try:
-        extract_audio(str(video_path), str(out_path), sample_rate=sample_rate, channels=channels)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"ffmpeg failed: {e}")
-
-    url_path = f"{settings.api_prefix}/assets/audio/{out_filename}"
-    return {"filename": out_filename, "url": url_path}
+    return {"job_id": task.id, "status": "queued"}
 
 
 @api_router.get("/assets/audio/{filename}")
