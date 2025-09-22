@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
 
@@ -57,6 +58,8 @@ export default function HomePage() {
     <main style={{ padding: 24, maxWidth: 720, margin: '0 auto', fontFamily: 'sans-serif' }}>
       <h1>Open Dubber</h1>
       <p>Upload a video, then run a dummy translation/dubbing job.</p>
+
+      <p><Link href="/converter">Go to Converter</Link></p>
 
       <section style={{ marginTop: 24 }}>
         <input type="file" accept="video/*" onChange={(e) => setFile(e.target.files?.[0] || null)} />
