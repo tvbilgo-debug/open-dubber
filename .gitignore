@@ -1,0 +1,29 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+
+# Node
+node_modules/
+.next/
+.next-standalone/
+.next-static/
+*.log
+
+# Editors
+.vscode/
+.idea/
+
+# Docker
+*.pid
+*.sock
+
+# Local storage artifacts
+storage/
+!.env.example
